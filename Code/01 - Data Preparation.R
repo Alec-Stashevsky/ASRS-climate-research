@@ -129,7 +129,28 @@ geocoded[["AM 2016"]][location == "Cali, 11001, Columbia", `lat` := 3.4226601209
 conventions.geocoded <- mutate_geocode(raw.conventions, location = location) %>% setDT()
 
 
+# Convert to Geo Unique Format --------------------------------------------
+geounique <- vector(mode = "list", length(geocoded))
+names(geounique) <- names(geocoded)
+i <- 1
+for (i in 1:length(geocoded)) {
+  geounique[[i]] <- unique(geocoded[[i]][, Frequency := .N, by = .(lon, lat)],
+                              by = c('lon', 'lat'))
+  i <- i + 1
+}
+
+# Make sure the sum of the frequencies is the same as the original data
+i <- 1
+for (i in 1:length(geocoded)) {
+  if (sum(geounique[[i]]$Frequency) != nrow(geocoded[[i]])) {
+    print(paste0("Error in ", names[geounique[[i]]]))
+  }
+  i <- i + 1
+}
+
+
 # Save --------------------------------------------------------------------
 
 saveRDS(geocoded, file = paste0(path.out, "geocoded.rds"))
 saveRDS(conventions.geocoded, file = paste0(path.out, "geocoded_conventions.rds"))
+saveRDS(geounique, file = paste0(path.out, "geounique.rds"))
