@@ -16,7 +16,7 @@ rm(list = ls())
 path.in <-"~/Git/ASRS-climate-research/Data/ASRS Geodistance Data.xlsx"
 path.out <-"~/Git/ASRS-climate-research/Data/"
 path.airports <- "~/Git/ASRS-climate-research/Data/OpenFlights/airports.txt"
-path.misqueries <- "~/Git/ASRS-climate-research/Data/OpenFlights/GoClimate API Misqueries.xlsx"
+path.misqueries <- "~/Git/ASRS-climate-research/Data/OpenFlights/"
 path.airports.supp <- "~/Git/ASRS-climate-research/Data/OpenFlights/AAO Airport Supplement.xlsx"
 
 YYZ <- read_excel(path.in, sheet = "YYZ 2013") %>% setDT()
@@ -32,7 +32,8 @@ summary.stats <- read_excel(path.in, sheet = "Summary Statistics") %>% setDT()
 airports.raw <- fread(path.airports)
 
 # Misqueries from previous projects
-misqueries <- read_excel(path.misqueries, sheet = "Misqueries") %>% setDT()
+misqueries <- read_excel(paste0(path.misqueries, "GoClimate API Misqueries.xlsx"), sheet = "Misqueries") %>% setDT()
+new.misqueries <- read_excel(paste0(path.misqueries, "new-misqueries.xlsx")) %>% setDT()
 
 # Import Airport Supplement (Manual Research to impute OpenFlights)
 airports.supp <- read_excel(paste0(path.airports.supp)) %>% setDT() # might not be needed, but include anyway
@@ -40,7 +41,6 @@ airports.supp <- read_excel(paste0(path.airports.supp)) %>% setDT() # might not 
 
 
 # Preprocess Data ---------------------------------------------------------
-
 
 # Drop columns where lon and lat are NA
 YYZ <- YYZ[!is.na(lon) & !is.na(lat)]
@@ -68,11 +68,13 @@ setnames(airports,
    "DST")
 )
 
+misquery.iata <- unique(c(misqueries$IATA, new.misqueries$IATA))
+
 airports.clean <- airports[
   # Exclude airports w/o coordinates and IATA codes
   Latitude != 0 & Longitude != 0 & IATA != "\\N"][
     # Filter out any which cause GoClimate Misqueries
-    !(IATA %in% misqueries$IATA)]
+    !(IATA %in% misquery.iata)]
 
 # Add in supplement
 airports.clean <- rbind(airports.clean, airports.supp, use.names = TRUE, fill = TRUE)
@@ -89,6 +91,9 @@ conventions.airports <- merge(
   by.y = "IATA",
   all.x = TRUE
 )
+
+conventions.airports <- conventions.airports[order(`Meeting Year`)]
+
 
 
 # Locate Nearest Airport --------------------------------------------------
@@ -282,5 +287,6 @@ final.sets <- list(
 
 write.xlsx(
   final.sets,
-  paste0(path.out, "ASRS Geodistance + Airport Data.xlsx")
+  paste0(path.out, "ASRS Geodistance + Airport Data.xlsx"),
+  overwrite = TRUE
  )
