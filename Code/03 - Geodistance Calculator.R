@@ -14,8 +14,8 @@ rm(list = ls())
 
 
 # Import  -----------------------------------------------------------------
-path.in <-"~/Git/ASRS-climate-research/Data/"
-path.out <-"~/Git/ASRS-climate-research/Data/"
+path.in <- "~/Git/ASRS-climate-research/Data/"
+path.out <- "~/Git/ASRS-climate-research/Data/"
 geounique <- readRDS(paste0(path.in, "geounique.rds"))
 conventions <- readRDS(paste0(path.in, "geocoded_conventions.rds"))
 conventions$IATA <- c("YYZ", "SAN", "VIE", "SFO", "BOS") #
