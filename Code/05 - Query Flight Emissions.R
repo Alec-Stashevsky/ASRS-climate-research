@@ -25,6 +25,7 @@ VIE <- read_excel(path.in, sheet = "VIE 2015") %>% setDT()
 SFO <- read_excel(path.in, sheet = "SFO 2016") %>% setDT()
 BOS <- read_excel(path.in, sheet = "BOS 2017") %>% setDT()
 conventions <- read_excel(path.in, sheet = "Convention Centers") %>% setDT()
+summary.stats <- read_excel(path.in, sheet = "Summary Statistics") %>% setDT()
 
 # Make sure convention are sorted by Meeting Year
 conventions <- conventions[order(`Meeting Year`)]
@@ -174,6 +175,27 @@ for (query_name in names(query.list)) {
 }
 
 
+# Combine Results ---------------------------------------------------------
+for (meeting_name in names(goclimate_results)) {
+  emissions <- bind_cols(goclimate_results[[meeting_name]])
+  assign(paste0(meeting_name, ".final"), cbind(get(meeting_name), emissions))
+}
+
 # Export ------------------------------------------------------------------
 saveRDS(goclimate_results, paste0(path.out, "goclimate_results.rds"))
 
+final.sets <- list(
+  "YYZ 2013" = YYZ.final,
+  "SAN 2014" = SAN.final,
+  "VIE 2015" = VIE.final,
+  "SFO 2016" = SFO.final,
+  "BOS 2017" = BOS.final,
+  "Convention Centers" = conventions,
+  "Summary Statistics" = summary.stats
+)
+
+write.xlsx(
+  final.sets,
+  paste0(path.out, "ASRS EMISSIONS.xlsx"),
+  overwrite = TRUE
+)
